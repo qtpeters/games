@@ -1,8 +1,6 @@
 
 angular.module( 'knockdown', [] )
    
-   
-
    .controller( 'GameController', function( $scope ) {
       $scope.working = "Say Hello to Zippy Owl";
 
@@ -19,13 +17,13 @@ angular.module( 'knockdown', [] )
          return node.lastChild
       }
 
-      function _addPng( bitmap, node ) {
-         d3.select( node )
+      function _addPng( c ) {
+         d3.select( c.node )
          .append( 'image' )
-         .attr( 'x', 0 ).attr( 'y', 0 )
-         .attr( 'width', 50 ).attr( 'height', 50 )
-         .attr( 'xlink:href', bitmap );
-         return node.lastChild
+         .attr( 'x', c.x ).attr( 'y', c.y )
+         .attr( 'width', c.width ).attr( 'height', c.height )
+         .attr( 'xlink:href', c.img );
+         return c.node.lastChild
       }
 
       function _movePngTo( png, ms, x, y ) {
@@ -46,26 +44,46 @@ angular.module( 'knockdown', [] )
 
       function _link( scope, element, attrs ) {
 
-         var size = 1000;
-
-         console.log( "Directive is running" + element );
-         var svg = D3Service.createSvgAsChild( element[0], size, size );
-         var imageElement = D3Service.addPng( "clips/owl.png", svg );
-
+         var size = 500;
          var ms = 500;
+         var seperator = 150;
+         var currentx = 50;
+         var columns = [];
+         
+         var svg = D3Service.createSvgAsChild( element[0], 800, size );
+         
+         var i;
+         for ( i=0; i<4; i++ ) { 
+            columns.push( D3Service.addPng({ 
+                  img: "clips/pillar.png", 
+                  node: svg,
+                  x: currentx, y: 227,
+                  height: 223,
+                  width: 100
+            }));
+            currentx = currentx + seperator;
+         }
+
+         var owlie = D3Service.addPng({ 
+               img: "clips/owl.png", 
+               node: svg,
+               x: 0, y: 0,
+               height: 50,
+               width: 50
+         });
 
          function _genRand() {
             return Math.floor( Math.random() * size ) + 1;
          }
 
-         D3Service.movePngTo( imageElement, ms, 300, 300 );
+         D3Service.movePngTo( owlie, ms, 300, 300 );
          function _move() {
             setTimeout( function() {
                var x = _genRand();
                var y = _genRand();
 
                D3Service.movePngTo( 
-                  imageElement, ms, 
+                  owlie, ms, 
                   _genRand() - 50, 
                   _genRand() - 50 );
                _move();
