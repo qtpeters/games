@@ -219,7 +219,12 @@ angular.module( 'knockdown', [] )
                width: 300
          });
 
-         var numbers = _shuffle([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]);
+         var numbers = [], i;
+         for ( i=0; i<11; i++ ) {
+            numbers[i] = i;
+         }
+
+         var numbers = _shuffle( numbers );
 
          _addMouseRow( Object.assign( pCfg, {
             startx: 120,
