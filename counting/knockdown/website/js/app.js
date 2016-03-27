@@ -21,6 +21,7 @@ angular.module( 'knockdown', [] )
          .append( 'image' )
          .attr( 'x', c.x ).attr( 'y', c.y )
          .attr( 'width', c.width ).attr( 'height', c.height )
+         .attr( "class", c.clazz )
          .attr( 'xlink:href', c.img );
          return c.node.lastChild
       }
@@ -30,8 +31,9 @@ angular.module( 'knockdown', [] )
          .append( 'text' )
          .attr( 'x', c.x ).attr( 'y', c.y )
          .text( c.text )
-         .attr("font-size", c.fontSize || 12 )
-         .attr("fill", c.fill || "black" );
+         .attr( "font-size", c.fontSize || 12 )
+         .attr( "fill", c.fill || "black" )
+         .on( 'click', c.onclick );
          return c.node.lastChild
       }
 
@@ -46,11 +48,19 @@ angular.module( 'knockdown', [] )
          return c.node.lastChild;
       }
 
-      function _movePngTo( png, ms, x, y ) {
-         d3.select( png ).transition()
-         .attr( 'x', x )
-         .attr( 'y', y )
-         .duration( ms );
+      function _movePngTo( c ) {
+         var t = d3.select( c.png )
+         .transition()
+         //.delay( 1000 )
+         .attr( 'x', c.x )
+         .attr( 'y', c.y );
+         
+         if ( c.size ) {
+            t = t.attr( 'width', c.size.width )
+            .attr( 'height', c.size.height )
+         }
+
+         t.duration( c.ms );
       }
 
       return {
@@ -84,7 +94,7 @@ angular.module( 'knockdown', [] )
          return array;
       }
 
-      function _addMouseRow( c ) {
+      function _addMouseRow( owlie, c ) {
    
          var currentx = c.startx;
 
@@ -94,26 +104,64 @@ angular.module( 'knockdown', [] )
             var n = c.numbers[i];
             var digitAdjust = n < 10 ? 100 : 90;
    
-            var image = D3Service.addPng({ 
+            var mousie = D3Service.addPng({ 
                img: "clips/mouse.png", 
-               node: c.svg,
+               node: c.node,
                x: currentx, y: c.y,
                height: c.mouseHeight,
-               width: c.mouseWidth
+               width: c.mouseWidth,
+               clazz: 'mouse'
             });
 
             var text = D3Service.addText({
-               node: c.svg,
+               node: c.node,
                text: n,
-               x: currentx + digitAdjust, y: c.y + 100,
+               x: currentx + digitAdjust, 
+               y: c.y + 100,
                fontSize: 40,
-               fill: 'blue'
+               fill: 'black'
             });
+
+            mousie.onclick = function( data ) {
+                  
+               console.log( "The mouse with the " + data.srcElement.innerHTML + " has been clicked" );
+                  
+               D3Service.movePngTo({ 
+                  png: owlie, 
+                  ms: 1000, 
+                  x: data.x, 
+                  y: data.y 
+               });
+
+               setTimeout( function() {
+                  D3Service.movePngTo({ 
+                     png: owlie, 
+                     ms: 1000, 
+                     x: 100, 
+                     y: 100,
+                     size: {
+                        width: 0,
+                        height: 0
+                     }
+                  });
+
+                  D3Service.movePngTo({ 
+                     png: data.srcElement, 
+                     ms: 1000, 
+                     x: 100, 
+                     y: 100,
+                     size: {
+                        width: 0,
+                        height: 0
+                     }
+                  });
+               }, 500 );
+            }; 
 
             c.mice.push({ 
                number: n,
                text: text, 
-               image: image
+               image: mousie
             });
 
             currentx = currentx + c.mouseSeperator;
@@ -177,7 +225,6 @@ angular.module( 'knockdown', [] )
          var svg = D3Service.createSvgAsChild( element[0], svgWidth, svgHeight );
         
          var pCfg = {
-            svg: svg,
             mouseHeight: mouseHeight, 
             mouseWidth: mouseWidth,
             mouseSeperator: mouseSeperator,
@@ -224,16 +271,26 @@ angular.module( 'knockdown', [] )
             numbers[i] = i;
          }
 
-         var numbers = _shuffle( numbers );
+         numbers = _shuffle( numbers );
 
-         _addMouseRow( Object.assign( pCfg, {
+         var owlie = D3Service.addPng({ 
+               img: "clips/owl.png", 
+               node: svg,
+               x: 850, y: 5,
+               height: 150,
+               width: 150
+         });
+
+         _addMouseRow( owlie, Object.assign( pCfg, {
+            node: svg,
             startx: 120,
             y: 280,
             numMice: 3,
             numbers: numbers.slice( 0, 3 )
          }));
 
-         _addMouseRow( Object.assign( pCfg, {
+         _addMouseRow( owlie, Object.assign( pCfg, {
+            node: svg,
             startx: 250,
             y: 425,
             numMice: 2,
@@ -246,14 +303,6 @@ angular.module( 'knockdown', [] )
                x: 700, y: 40,
                height: 200,
                width: 300
-         });
-
-         var owlie = D3Service.addPng({ 
-               img: "clips/owl.png", 
-               node: svg,
-               x: 850, y: 5,
-               height: 150,
-               width: 150
          });
       }
 
